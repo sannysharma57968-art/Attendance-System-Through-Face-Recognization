@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Smart Attendance</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-page">
+    <div class="login-bg">
+        <div class="login-bg-shape shape-1"></div>
+        <div class="login-bg-shape shape-2"></div>
+        <div class="login-bg-shape shape-3"></div>
+    </div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect width="48" height="48" rx="12" fill="url(#logo-grad)"/>
+                        <path d="M24 14a6 6 0 0 1 6 6v2a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2v-2a6 6 0 0 1 6-6z" fill="white" opacity="0.95"/>
+                        <path d="M30 28v2a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-2" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <circle cx="24" cy="24" r="2" fill="white" opacity="0.8"/>
+                        <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#3498db"/><stop offset="1" stop-color="#2c3e50"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <h1>Admin Sign In</h1>
+                <p>Enter your credentials to access the admin panel</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter username" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter password" autocomplete="current-password">
+                </div>
+                <div id="loginError" class="login-error" role="alert" aria-live="polite"></div>
+                <button type="submit" id="loginBtn" class="login-submit">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loading" aria-hidden="true">Signing in…</span>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <a href="index.html">← Back to Live Dashboard</a>
+            </div>
+        </div>
+        <p class="login-legal">Smart Attendance System · Admin access only</p>
+    </div>
+
+    <script>
+        (function () {
+            const form = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const btnLoading = loginBtn.querySelector('.btn-loading');
+            const loginError = document.getElementById('loginError');
+
+            function setLoading(loading) {
+                loginBtn.disabled = loading;
+                btnText.hidden = loading;
+                btnLoading.hidden = !loading;
+                loginError.textContent = '';
+            }
+
+            function showError(msg) {
+                loginError.textContent = msg;
+                loginError.classList.add('show');
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                setLoading(true);
+
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+
+                try {
+                    const res = await fetch('/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json().catch(() => ({}));
+
+                    if (!res.ok) {
+                        setLoading(false);
+                        showError(data.detail || 'Invalid username or password.');
+                        return;
+                    }
+
+                    if (data.access_token) {
+                        localStorage.setItem('admin_token', data.access_token);
+                        const next = new URLSearchParams(window.location.search).get('next') || 'admin.html';
+                        window.location.href = next;
+                        return;
+                    }
+                    showError('Invalid response from server.');
+                } catch (err) {
+                    showError('Unable to connect. Please try again.');
+                }
+                setLoading(false);
+            });
+        })();
+    </script>
+</body>
+</html>
